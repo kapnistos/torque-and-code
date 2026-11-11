@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Torque &amp; Code: our team for the 2026 NASA Space Apps Challenge in Eindhoven, building a Lunar Landing Site Navigator.">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Torque &amp; Code</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: mission-briefing sheet. One column of sections, each with a mono label rail; hero shows the low-sun horizon at the lunar south pole. */
+:root {
+  --bg: #eef0f2;          /* regolith light */
+  --surface: #ffffff;
+  --ink: #1b2129;
+  --muted: #5b6573;
+  --line: #d3d8de;
+  --sun: #b86a00;         /* sunlight: power, illumination */
+  --sun-soft: #f6e6cc;
+  --earth: #1f5fa8;       /* Earth: comms, line of sight */
+  --earth-soft: #dbe7f5;
+  --sky: #161b22;         /* lunar sky in the hero diagram */
+  --rim: #3a424d;
+  --font-display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161b; --surface: #1a2027; --ink: #e6e9ed; --muted: #9aa4b1; --line: #2c343e;
+    --sun: #f0a63a; --sun-soft: #3a2a12; --earth: #6fa8ec; --earth-soft: #16273d;
+    --sky: #0a0d11; --rim: #4a5461; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161b; --surface: #1a2027; --ink: #e6e9ed; --muted: #9aa4b1; --line: #2c343e;
+  --sun: #f0a63a; --sun-soft: #3a2a12; --earth: #6fa8ec; --earth-soft: #16273d;
+  --sky: #0a0d11; --rim: #4a5461; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.6;
+}
+a { color: var(--earth); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--sun); outline-offset: 2px; }
+.wrap {
+  max-width: 1040px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+h1, h2, h3 { font-family: var(--font-display); font-weight: 700; line-height: 1.05; text-wrap: balance; margin: 0; letter-spacing: 0.01em; }
+h2 { font-size: clamp(30px, 4.5vw, 42px); text-transform: uppercase; }
+h3 { font-size: 22px; font-weight: 600; }
+p { margin: 0; }
+.label { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.todo { color: var(--muted); font-style: italic; }
+
+/* top bar */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+.topbar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 12px; flex-wrap: wrap; }
+.brand { font-family: var(--font-display); font-weight: 700; font-size: 22px; letter-spacing: 0.04em; text-transform: uppercase; }
+.brand span { color: var(--sun); }
+.nav { display: flex; gap: 4px 16px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 13px; }
+.nav a { color: var(--muted); text-decoration: none; }
+.nav a:hover { color: var(--ink); }
+
+/* hero */
+.hero { padding-block: 48px 40px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: center; }
+.hero > * { min-width: 0; }
+.hero h1 { font-size: clamp(48px, 8vw, 88px); text-transform: uppercase; }
+.hero h1 .amp { color: var(--sun); }
+.hero .lede { font-size: 19px; margin-top: 18px; max-width: 34em; }
+.hero .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+.chip { font-family: var(--font-mono); font-size: 12px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); white-space: nowrap; }
+.chip.sun { border-color: var(--sun); color: var(--sun); background: var(--sun-soft); }
+.chip.earth { border-color: var(--earth); color: var(--earth); background: var(--earth-soft); }
+.horizon { width: 100%; max-width: 100%; border-radius: 6px; background: var(--sky); display: block; }
+.horizon-cap { margin-top: 8px; font-size: 13px; color: var(--muted); }
+
+/* sections */
+section.block { padding-block: 48px; border-top: 1px solid var(--line); }
+.block-head { display: grid; grid-template-columns: 160px 1fr; gap: 24px; margin-bottom: 28px; }
+.block-head > * { min-width: 0; }
+.block-head p { margin-top: 10px; color: var(--muted); max-width: 62ch; }
+
+/* team */
+.team { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.member { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 20px; display: grid; gap: 12px; align-content: start; }
+.avatar { width: 56px; height: 56px; border-radius: 50%; border: 1.5px dashed var(--muted); display: grid; place-items: center; font-family: var(--font-display); font-size: 22px; color: var(--muted); }
+.member .name { font-family: var(--font-display); font-size: 24px; font-weight: 600; }
+.member dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 14px; }
+.member dt { font-family: var(--font-mono); font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; padding-top: 2px; }
+.member dd { margin: 0; }
+.role { font-size: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+.role strong { display: block; font-weight: 600; }
+.note { margin-top: 16px; font-size: 14px; color: var(--muted); }
+
+/* challenge */
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.two > * { min-width: 0; }
+.prose p + p { margin-top: 12px; }
+.prose { max-width: 62ch; }
+.qa { display: grid; gap: 14px; }
+.qa div { padding: 16px 18px; border-left: 3px solid var(--line); background: var(--surface); }
+.qa div.sun { border-left-color: var(--sun); }
+.qa div.earth { border-left-color: var(--earth); }
+.qa h3 { font-size: 19px; margin-bottom: 4px; }
+.qa p { font-size: 15px; color: var(--muted); }
+
+/* pipeline */
+.pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.pipe > div { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px; min-width: 0; }
+.pipe .step { font-family: var(--font-mono); font-size: 12px; color: var(--sun); }
+.pipe h3 { font-size: 18px; margin: 4px 0 6px; }
+.pipe p { font-size: 14px; color: var(--muted); }
+.formula { margin-top: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; overflow-x: auto; }
+.formula code { font-family: var(--font-mono); font-size: 15px; white-space: nowrap; }
+.formula p { font-size: 14px; color: var(--muted); margin-top: 8px; }
+
+/* features */
+.features { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0 32px; list-style: none; padding: 0; margin: 0; }
+.features li { padding: 14px 0; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 74px 1fr; gap: 12px; }
+.features li > * { min-width: 0; }
+.tag { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 0; }
+.tag.mvp { color: var(--earth); }
+.tag.stretch { color: var(--muted); }
+.features strong { display: block; font-weight: 600; }
+.features span.d { font-size: 14px; color: var(--muted); }
+
+/* sites table */
+.tablebox { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 560px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 500; }
+tr:last-child td { border-bottom: 0; }
+td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--muted); }
+
+/* schedule */
+.timeline { display: grid; gap: 0; }
+.slot { display: grid; grid-template-columns: 150px 1fr; gap: 20px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.slot > * { min-width: 0; }
+.slot .when { font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.slot.deadline .when, .slot.deadline strong { color: var(--sun); }
+.slot strong { font-weight: 600; display: block; }
+.slot span { font-size: 14px; color: var(--muted); }
+
+/* stack + split */
+.stack { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.stack div { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px; }
+.stack .label { display: block; margin-bottom: 4px; }
+
+/* event + checklist */
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 8px 20px; margin: 0; }
+.facts dt { font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding-top: 3px; }
+.facts dd { margin: 0; min-width: 0; }
+.check { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.check label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.check input { margin-top: 5px; accent-color: var(--sun); width: 16px; height: 16px; flex: none; }
+.check input:checked + span { color: var(--muted); text-decoration: line-through; }
+
+footer { border-top: 1px solid var(--line); padding-block: 28px 40px; font-size: 13px; color: var(--muted); }
+footer .wrap { display: grid; gap: 6px; }
+
+@media (max-width: 820px) {
+  .hero { grid-template-columns: 1fr; padding-block: 32px; gap: 28px; }
+  .block-head { grid-template-columns: 1fr; gap: 6px; }
+  .two { grid-template-columns: 1fr; }
+  .pipe { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+  .pipe { grid-template-columns: 1fr; }
+  .slot { grid-template-columns: 1fr; gap: 2px; }
+  .features li { grid-template-columns: 1fr; gap: 2px; }
+  .nav { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sun-dot { animation: skim 9s ease-in-out infinite alternate; }
+  @keyframes skim { from { transform: translateX(-60px); } to { transform: translateX(60px); } }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <div class="brand">Torque <span>&amp;</span> Code</div>
+    <nav class="nav" aria-label="Sections">
+      <a href="#team">Team</a>
+      <a href="#challenge">Challenge</a>
+      <a href="#build">Build</a>
+      <a href="#sites">Sites</a>
+      <a href="#schedule">Schedule</a>
+      <a href="#event">Event</a>
+      <a href="#links">Links</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <div class="label">NASA Space Apps Challenge 2026 · Eindhoven · 14–15 Nov</div>
+        <h1 style="margin-top:12px">Torque <span class="amp">&amp;</span> Code</h1>
+        <p class="lede">Mechanical and computer science students from Eindhoven. Over one weekend we're building a tool that answers one question: where at the Moon's south pole should a mission land, and on which dates?</p>
+        <div class="meta">
+          <span class="chip sun">Lunar Landing Site Navigator</span>
+          <span class="chip">Working title: Shackleton</span>
+          <span class="chip earth">Virtual event</span>
+        </div>
+      </div>
+      <figure style="margin:0">
+        <svg class="horizon" viewBox="0 0 480 260" role="img" aria-labelledby="hz-t hz-d">
+          <title id="hz-t">Sun and Earth low on the lunar south pole horizon</title>
+          <desc id="hz-d">A crater rim silhouette with the Sun skimming just above the horizon and Earth hanging low in the sky.</desc>
+          <rect x="0" y="0" width="480" height="260" fill="var(--sky)"/>
+          <g fill="var(--ink)" opacity="0.55">
+            <circle cx="40" cy="30" r="1"/><circle cx="120" cy="60" r="0.8"/><circle cx="210" cy="24" r="1.2"/>
+            <circle cx="300" cy="48" r="0.8"/><circle cx="420" cy="20" r="1"/><circle cx="455" cy="90" r="0.8"/>
+            <circle cx="70" cy="110" r="0.8"/><circle cx="350" cy="110" r="1"/>
+          </g>
+          <!-- Earth: low, roughly south-pole view -->
+          <circle cx="372" cy="128" r="16" fill="var(--earth)"/>
+          <path d="M362 122 q6 -4 12 0 q-2 6 -8 8 z" fill="var(--sky)" opacity="0.35"/>
+          <text x="372" y="160" fill="var(--earth)" font-family="IBM Plex Mono, monospace" font-size="11" text-anchor="middle">Earth · comms</text>
+          <!-- Sun skimming the horizon -->
+          <g class="sun-dot">
+            <circle cx="150" cy="182" r="13" fill="var(--sun)"/>
+            <circle cx="150" cy="182" r="24" fill="var(--sun)" opacity="0.18"/>
+          </g>
+          <!-- terrain -->
+          <path d="M0 200 L40 194 L80 198 L120 190 L170 196 L210 186 L250 192 L300 184 L340 192 L380 188 L430 196 L480 190 L480 260 L0 260 Z" fill="var(--rim)"/>
+          <path d="M0 222 L60 214 L110 220 L180 210 L240 218 L320 208 L400 218 L480 212 L480 260 L0 260 Z" fill="var(--sky)" opacity="0.45"/>
+          <line x1="0" y1="196" x2="480" y2="196" stroke="var(--sun)" stroke-width="0.8" stroke-dasharray="3 4" opacity="0.7"/>
+          <text x="10" y="248" fill="var(--sun)" font-family="IBM Plex Mono, monospace" font-size="11">Sun elevation ≈ 0–2° · power is never guaranteed</text>
+        </svg>
+        <figcaption class="horizon-cap">At the south pole the Sun never climbs much above the horizon. A few metres of crater rim decide whether solar panels get light.</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <!-- TEAM -->
+  <section class="block" id="team">
+    <div class="wrap">
+      <div class="block-head">
+        <div class="label">01 · Team</div>
+        <div>
+          <h2>The crew</h2>
+          <p>Names, studies and photos still to come. The roles below are how we plan to split the work; we'll assign them before Saturday.</p>
+        </div>
+      </div>
+      <div class="team">
+        <article class="member">
+          <div class="avatar" aria-hidden="true">?</div>
+          <div class="name todo">Name to add</div>
+          <dl><dt>Study</dt><dd class="todo">to add</dd><dt>Year</dt><dd class="todo">to add</dd></dl>
+          <div class="role"><strong>Physics &amp; power model</strong>Solar power, battery sizing for dark periods, sanity-checking every number.</div>
+        </article>
+        <article class="member">
+          <div class="avatar" aria-hidden="true">?</div>
+          <div class="name todo">Name to add</div>
+          <dl><dt>Study</dt><dd class="todo">to add</dd><dt>Year</dt><dd class="todo">to add</dd></dl>
+          <div class="role"><strong>Data &amp; ephemeris</strong>JPL Horizons queries, Sun and Earth elevation per site, caching the results.</div>
+        </article>
+        <article class="member">
+          <div class="avatar" aria-hidden="true">?</div>
+          <div class="name todo">Name to add</div>
+          <dl><dt>Study</dt><dd class="todo">to add</dd><dt>Year</dt><dd class="todo">to add</dd></dl>
+          <div class="role"><strong>Front end &amp; charts</strong>Site map, sunlight and comms charts, the side-by-side compare view.</div>
+        </article>
+        <article class="member">
+          <div class="avatar" aria-hidden="true">?</div>
+          <div class="name todo">Name to add</div>
+          <dl><dt>Study</dt><dd class="todo">to add</dd><dt>Year</dt><dd class="todo">to add</dd></dl>
+          <div class="role"><strong>Scoring, demo &amp; submission</strong>Site ranking logic, the 30-second video and the project page.</div>
+        </article>
+      </div>
+      <p class="note">Teams can have up to six people. Everyone must register for the Eindhoven local event to be eligible for global judging.</p>
+    </div>
+  </section>
+
+  <!-- CHALLENGE -->
+  <section class="block" id="challenge">
+    <div class="wrap">
+      <div class="block-head">
+        <div class="label">02 · Challenge</div>
+        <div>
+          <h2>Lunar Landing Site Navigator</h2>
+          <p>Difficulty: Intermediate to Advanced. Subjects: Moon, Human Exploration, Space Exploration, Software.</p>
+        </div>
+      </div>
+      <div class="two">
+        <div class="prose">
+          <p>Missions to the lunar south pole work under hard limits on light and communication. The Sun stays close to the horizon, so ridges and crater rims can leave a site dark for days. Earth also dips below the horizon from some sites, which cuts direct radio contact.</p>
+          <p>Tools that compute Sun and Earth positions already exist, but they are hard to use. NASA asks for something intuitive: a way for mission planners, teachers and the public to compare landing sites and dates quickly, and see the power and communication picture at a glance.</p>
+          <p><a href="https://www.spaceappschallenge.org/2026/challenges/" target="_blank" rel="noopener">All 2026 challenges on the Space Apps site</a></p>
+        </div>
+        <div class="qa">
+          <div class="sun"><h3>Will it have power?</h3><p>How many hours of sunlight per day, how much a solar panel produces, and how long the longest dark stretch lasts.</p></div>
+          <div class="earth"><h3>Can it call home?</h3><p>When Earth is above the local horizon, giving a direct-to-Earth communication window.</p></div>
+          <div><h3>Which site, which date?</h3><p>A ranked side-by-side comparison so the trade-off is obvious in seconds.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BUILD -->
+  <section class="block" id="build">
+    <div class="wrap">
+      <div class="block-head">
+        <div class="label">03 · What we build</div>
+        <div>
+          <h2>From coordinates to a verdict</h2>
+          <p>The heavy astronomy comes from NASA JPL's Horizons service. Our work is the engineering model on top and an interface that makes the answer obvious.</p>
+        </div>
+      </div>
+      <div class="pipe">
+        <div><div class="step">Step 1</div><h3>Pick sites</h3><p>Candidate south-pole sites with latitude and longitude, plus a date range.</p></div>
+        <div><div class="step">Step 2</div><h3>Query Horizons</h3><p>Sun and Earth azimuth and elevation, seen from each site, hour by hour.</p></div>
+        <div><div class="step">Step 3</div><h3>Power model</h3><p>Panel output from Sun elevation; battery needed to survive the longest dark gap.</p></div>
+        <div><div class="step">Step 4</div><h3>Comms windows</h3><p>Hours with Earth above the horizon, and the longest blackout.</p></div>
+        <div><div class="step">Step 5</div><h3>Score &amp; compare</h3><p>Rank sites and dates; show two or three side by side.</p></div>
+      </div>
+      <div class="formula">
+        <code>P = A · η · 1361 W/m² · sin(e<sub>sun</sub>)</code>
+        <p>A is panel area, η is cell efficiency, 1361 W/m² is the solar constant at 1 AU and e<sub>sun</sub> is Sun elevation. This assumes a flat panel; a vertical, Sun-tracking panel (common at the poles) gets cos(e) instead, which we'll offer as an option.</p>
+      </div>
+
+      <h3 style="margin:36px 0 8px">Feature list</h3>
+      <ul class="features">
+        <li><span class="tag mvp">MVP</span><div><strong>Site picker on a south-pole map</strong><span class="d">Click a candidate site or enter coordinates.</span></div></li>
+        <li><span class="tag mvp">MVP</span><div><strong>Sunlight chart</strong><span class="d">Sun elevation over the chosen dates, with illuminated hours highlighted.</span></div></li>
+        <li><span class="tag mvp">MVP</span><div><strong>Earth visibility chart</strong><span class="d">Comms windows and blackouts on the same time axis.</span></div></li>
+        <li><span class="tag mvp">MVP</span><div><strong>Power &amp; battery panel</strong><span class="d">Energy per day and the battery size the longest night requires.</span></div></li>
+        <li><span class="tag mvp">MVP</span><div><strong>Compare view with a score</strong><span class="d">Two or three sites side by side, ranked.</span></div></li>
+        <li><span class="tag stretch">Stretch</span><div><strong>Terrain horizon</strong><span class="d">Use LRO LOLA elevation data so nearby ridges can block the Sun.</span></div></li>
+        <li><span class="tag stretch">Stretch</span><div><strong>Best-date finder</strong><span class="d">Search a whole year for the best landing window per site.</span></div></li>
+        <li><span class="tag stretch">Stretch</span><div><strong>Sky view</strong><span class="d">An animated 360° horizon showing Sun and Earth tracks.</span></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SITES -->
+  <section class="block" id="sites">
+    <div class="wrap">
+      <div class="block-head">
+        <div class="label">04 · Candidate sites</div>
+        <div>
+          <h2>Where we'll look</h2>
+          <p>Starting set: NASA's candidate regions for Artemis III plus two well-studied rim sites. Coordinates get filled in on Saturday morning from published sources.</p>
+        </div>
+      </div>
+      <div class="tablebox">
+        <table>
+          <thead><tr><th>Site</th><th>Source</th><th>Lat</th><th>Lon</th><th>Why it's interesting</th></tr></thead>
+          <tbody>
+            <tr><td>Shackleton crater rim</td><td>Literature</td><td class="num">≈ −89.9°</td><td class="num">TBD</td><td>Near-permanent light on parts of the rim; the classic reference site.</td></tr>
+            <tr><td>Connecting Ridge</td><td>Literature</td><td class="num">TBD</td><td class="num">TBD</td><td>Ridge between Shackleton and de Gerlache with long illumination.</td></tr>
+            <tr><td>Malapert Massif</td><td>Artemis III region</td><td class="num">TBD</td><td class="num">TBD</td><td>High ground with frequent Earth visibility.</td></tr>
+            <tr><td>Mons Mouton</td><td>Artemis III region</td><td class="num">TBD</td><td class="num">TBD</td><td>Large flat-topped mountain.</td></tr>
+            <tr><td>Haworth</td><td>Artemis III region</td><td class="num">TBD</td><td class="num">TBD</td><td>Next to a large permanently shadowed crater.</td></tr>
+            <tr><td>Nobile Rim 1</td><td>Artemis III region</td><td class="num">TBD</td><td class="num">TBD</td><td>Rim of Nobile crater, near cold traps.</td></tr>
+            <tr><td>de Gerlache Rim 2</td><td>Artemis III region</td><td class="num">TBD</td><td class="num">TBD</td><td>Rim site close to the pole.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCHEDULE -->
+  <section class="block" id="schedule">
+    <div class="wrap">
+      <div class="block-head">
+        <div class="label">05 · Schedule</div>
+        <div>
+          <h2>48 hours</h2>
+          <p>All times are Eindhoven local time (CET). We test the riskiest part, the Horizons API, first.</p>
+        </div>
+      </div>
+      <div class="timeline">
+        <div class="slot"><div class="when">Before Sat</div><div><strong>Everyone registered, team created</strong><span>Accounts, Eindhoven local event, join the team page and the WhatsApp group.</span></div></div>
+        <div class="slot"><div class="when">Sat 09:00</div><div><strong>Kick-off</strong><span>Submissions open. Agree the data format between the physics model and the app.</span></div></div>
+        <div class="slot"><div class="when">Sat 09:30–12:00</div><div><strong>One site working end to end</strong><span>Horizons returns Sun and Earth elevation for Shackleton rim; sketch the screens.</span></div></div>
+        <div class="slot"><div class="when">Sat 13:00–20:00</div><div><strong>Charts and power model</strong><span>Sunlight and Earth charts live; power and battery numbers checked by hand.</span></div></div>
+        <div class="slot"><div class="when">Sat 20:00–late</div><div><strong>All sites loaded</strong><span>Batch queries for every candidate site and cache them as JSON.</span></div></div>
+        <div class="slot"><div class="when">Sun 09:00–14:00</div><div><strong>Compare view, map, scoring</strong><span>Feature freeze at 14:00. Stretch goals only if everything else works.</span></div></div>
+        <div class="slot"><div class="when">Sun 14:00–20:00</div><div><strong>Polish and demo</strong><span>Fix bugs, record the 30-second video, write the project page.</span></div></div>
+        <div class="slot deadline"><div class="when">Sun 23:59</div><div><strong>Submission closes</strong><span>Submit from the Project tab on our team page. Aim to submit by 21:00.</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STACK -->
+  <section class="block" id="stack">
+    <div class="wrap">
+      <div class="block-head">
+        <div class="label">06 · Stack</div>
+        <div>
+          <h2>Tools</h2>
+          <p>Simple, free and fast to set up. No backend unless we need one.</p>
+        </div>
+      </div>
+      <div class="stack">
+        <div><span class="label">Ephemeris</span>NASA JPL Horizons API</div>
+        <div><span class="label">Data prep</span>Python, with results saved as JSON</div>
+        <div><span class="label">Web app</span>HTML / JavaScript</div>
+        <div><span class="label">Charts</span>Chart.js or Plotly</div>
+        <div><span class="label">Map</span>Leaflet with a polar base map</div>
+        <div><span class="label">Hosting</span><a href="https://kapnistos.github.io/torque-and-code/" target="_blank" rel="noopener">GitHub Pages</a></div>
+        <div><span class="label">Code</span><a href="https://github.com/kapnistos/torque-and-code" target="_blank" rel="noopener">kapnistos/torque-and-code</a></div>
+        <div><span class="label">Chat</span>WhatsApp (event) + call for the team</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EVENT -->
+  <section class="block" id="event">
+    <div class="wrap">
+      <div class="block-head">
+        <div class="label">07 · Event</div>
+        <div>
+          <h2>Event details</h2>
+          <p>Everything about the hackathon itself, in one place.</p>
+        </div>
+      </div>
+      <div class="two">
+        <dl class="facts">
+          <dt>Event</dt><dd>NASA Space Apps Challenge 2026, theme "The Next Frontier"</dd>
+          <dt>Dates</dt><dd class="mono">Sat 14 Nov 09:00 – Sun 15 Nov 23:59</dd>
+          <dt>Local event</dt><dd>Eindhoven, Netherlands (virtual)</dd>
+          <dt>Hosts</dt><dd>Run with FRC Team 8795 Chaotics, with mentors</dd>
+          <dt>Comms</dt><dd>Official Eindhoven WhatsApp group, link after registering</dd>
+          <dt>Judging</dt><dd>Local winners chosen in Eindhoven; strong projects go forward to NASA's global judging</dd>
+          <dt>Team size</dt><dd>Up to six people, all on the same local event</dd>
+          <dt>After</dt><dd>Participant survey due 1 December</dd>
+          <dt>Links</dt><dd><a href="https://www.spaceappschallenge.org/2026/local-events/eindhoven/" target="_blank" rel="noopener">Eindhoven event page</a> · <a href="https://www.spaceappschallenge.org/2026/find-a-team/" target="_blank" rel="noopener">Find a team</a></dd>
+        </dl>
+        <div>
+          <h3 style="margin-bottom:12px">Before Saturday</h3>
+          <ul class="check" id="prep">
+            <li><label><input type="checkbox" id="c1"><span>Everyone creates a Space Apps account</span></label></li>
+            <li><label><input type="checkbox" id="c2"><span>Everyone registers for the 2026 hackathon</span></label></li>
+            <li><label><input type="checkbox" id="c3"><span>Everyone picks Eindhoven as local event</span></label></li>
+            <li><label><input type="checkbox" id="c4"><span>Team owner creates "Torque &amp; Code" and picks the challenge</span></label></li>
+            <li><label><input type="checkbox" id="c5"><span>Everyone joins the team and the WhatsApp group</span></label></li>
+            <li><label><input type="checkbox" id="c6"><span>Create the GitHub repo and invite everyone</span></label></li>
+            <li><label><input type="checkbox" id="c7"><span>Test one Horizons query for a south-pole site</span></label></li>
+            <li><label><input type="checkbox" id="c8"><span>Fill in names, studies and roles on this page</span></label></li>
+          </ul>
+          <p class="note">Ticks are saved in your own browser only.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LINKS -->
+  <section class="block" id="links">
+    <div class="wrap">
+      <div class="block-head">
+        <div class="label">08 · Links</div>
+        <div>
+          <h2>Everything in one place</h2>
+          <p>Bookmark this section. Links marked "to add" appear once we have them.</p>
+        </div>
+      </div>
+      <div class="tablebox">
+        <table>
+          <thead><tr><th>What</th><th>Link</th><th>Use it for</th></tr></thead>
+          <tbody>
+            <tr><td>Team website</td><td><a href="https://kapnistos.github.io/torque-and-code/" target="_blank" rel="noopener">kapnistos.github.io/torque-and-code</a></td><td>This page, public</td></tr>
+            <tr><td>GitHub repo</td><td><a href="https://github.com/kapnistos/torque-and-code" target="_blank" rel="noopener">github.com/kapnistos/torque-and-code</a></td><td>All code, issues, task split</td></tr>
+            <tr><td>WhatsApp: Eindhoven event</td><td class="todo">to add (shared after registering)</td><td>Official announcements and mentors</td></tr>
+            <tr><td>WhatsApp: our team</td><td class="todo">to add</td><td>Team chat</td></tr>
+            <tr><td>Space Apps team page</td><td class="todo">to add (after the team is created)</td><td>Joining the team, submitting the project</td></tr>
+            <tr><td>Eindhoven local event</td><td><a href="https://www.spaceappschallenge.org/2026/local-events/eindhoven/" target="_blank" rel="noopener">spaceappschallenge.org · Eindhoven</a></td><td>Register for our local event</td></tr>
+            <tr><td>Space Apps 2026</td><td><a href="https://www.spaceappschallenge.org/2026/" target="_blank" rel="noopener">spaceappschallenge.org/2026</a></td><td>Account, registration, rules</td></tr>
+            <tr><td>All challenges</td><td><a href="https://www.spaceappschallenge.org/2026/challenges/" target="_blank" rel="noopener">spaceappschallenge.org · challenges</a></td><td>Full challenge text and resources</td></tr>
+            <tr><td>Find a team</td><td><a href="https://www.spaceappschallenge.org/2026/find-a-team/" target="_blank" rel="noopener">spaceappschallenge.org · find a team</a></td><td>Search or create teams</td></tr>
+            <tr><td>JPL Horizons (web)</td><td><a href="https://ssd.jpl.nasa.gov/horizons/" target="_blank" rel="noopener">ssd.jpl.nasa.gov/horizons</a></td><td>Try Sun and Earth queries by hand</td></tr>
+            <tr><td>JPL Horizons API docs</td><td><a href="https://ssd-api.jpl.nasa.gov/doc/horizons.html" target="_blank" rel="noopener">ssd-api.jpl.nasa.gov · horizons</a></td><td>The API our app calls</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>Torque &amp; Code · participant team page for the 2026 NASA Space Apps Challenge, Eindhoven.</div>
+    <div>Made by the team. Not affiliated with or endorsed by NASA.</div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var boxes = document.querySelectorAll('#prep input[type=checkbox]');
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem('tc-prep') || '{}'); } catch (e) {}
+  boxes.forEach(function (b) {
+    if (saved[b.id]) b.checked = true;
+    b.addEventListener('change', function () {
+      saved[b.id] = b.checked;
+      try { localStorage.setItem('tc-prep', JSON.stringify(saved)); } catch (e) {}
+    });
+  });
+})();
+</script>
+</body>
+</html>
